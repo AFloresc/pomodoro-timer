@@ -8,9 +8,18 @@ export function usePomodoro(config) {
 
     const intervalRef = useRef(null);
 
-    // -----------------------------
-    // Update timeLeft when config changes
-    // -----------------------------
+    // --------------------------------------------------
+    // Request notification permission on mount
+    // --------------------------------------------------
+    useEffect(() => {
+        if (Notification.permission === "default") {
+        Notification.requestPermission();
+        }
+    }, []);
+
+    // --------------------------------------------------
+    // Update timeLeft when config changes (only if stopped)
+    // --------------------------------------------------
     useEffect(() => {
         if (!isRunning) {
         if (sessionType === "work") setTimeLeft(config.work * 60);
@@ -19,9 +28,9 @@ export function usePomodoro(config) {
         }
     }, [config, sessionType, isRunning]);
 
-    // -----------------------------
+    // --------------------------------------------------
     // Start timer
-    // -----------------------------
+    // --------------------------------------------------
     const start = () => {
         if (isRunning) return;
 
@@ -39,17 +48,17 @@ export function usePomodoro(config) {
         }, 1000);
     };
 
-    // -----------------------------
+    // --------------------------------------------------
     // Stop timer
-    // -----------------------------
+    // --------------------------------------------------
     const stop = () => {
         setIsRunning(false);
         clearInterval(intervalRef.current);
     };
 
-    // -----------------------------
+    // --------------------------------------------------
     // Reset timer
-    // -----------------------------
+    // --------------------------------------------------
     const reset = () => {
         stop();
         if (sessionType === "work") setTimeLeft(config.work * 60);
@@ -57,11 +66,22 @@ export function usePomodoro(config) {
         if (sessionType === "long") setTimeLeft(config.long * 60);
     };
 
-    // -----------------------------
-    // Handle session transitions
-    // -----------------------------
+    // --------------------------------------------------
+    // Handle session transitions + notifications
+    // --------------------------------------------------
     const handleSessionEnd = () => {
         setIsRunning(false);
+
+        // Notification
+        if (Notification.permission === "granted") {
+        new Notification("Pomodoro Timer", {
+            body:
+            sessionType === "work"
+                ? "Work session completed! Time for a break."
+                : "Break finished! Back to work.",
+            silent: false
+        });
+        }
 
         // Work session finished → increment count
         if (sessionType === "work") {
@@ -85,9 +105,9 @@ export function usePomodoro(config) {
         }
     };
 
-    // -----------------------------
+    // --------------------------------------------------
     // Cleanup interval on unmount
-    // -----------------------------
+    // --------------------------------------------------
     useEffect(() => {
         return () => clearInterval(intervalRef.current);
     }, []);

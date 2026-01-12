@@ -18,7 +18,9 @@ export function PomodoroProvider({ children }) {
     // Persistencia opcional (si quieres activarla más adelante)
     useEffect(() => {
         const saved = localStorage.getItem("pomodoroConfig");
-        if (saved) setConfig(JSON.parse(saved));
+        if (saved) {
+            setConfig(JSON.parse(saved));
+        }
     }, []);
 
     useEffect(() => {
