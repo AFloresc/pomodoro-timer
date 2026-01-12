@@ -165,7 +165,3 @@ Feel free to use, modify, and distribute.
 
 Built with care by Alex.
 Focused on clean architecture, modular design, and premium UI polish.
-
----
-
-# Want me to generate a **Spanish version** too, or a **GitHub‑optimized version with badges**?
