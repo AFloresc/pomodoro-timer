@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { playBeep } from "../utils/sound";
+
 
 export function usePomodoro(config) {
     const [timeLeft, setTimeLeft] = useState(config.work * 60);
@@ -33,6 +35,8 @@ export function usePomodoro(config) {
     };
 
     const handleSessionEnd = () => {
+        playBeep();
+
         setIsRunning(false);
 
         if (sessionType === "work") {
