@@ -8,6 +8,9 @@ export function usePomodoro(config) {
 
     const intervalRef = useRef(null);
 
+    const sound = new Audio("/sounds/beep.mp3");
+    sound.volume = 0.5; // opcional
+
     // --------------------------------------------------
     // Request notification permission on mount
     // --------------------------------------------------
@@ -70,6 +73,14 @@ export function usePomodoro(config) {
     // Handle session transitions + notifications
     // --------------------------------------------------
     const handleSessionEnd = () => {
+        // Play sound
+        try {
+            sound.currentTime = 0;
+            sound.play();
+        } catch (e) {
+            console.warn("Sound playback blocked:", e);
+        }
+
         setIsRunning(false);
 
         // Notification
