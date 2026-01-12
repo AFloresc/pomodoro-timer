@@ -73,6 +73,7 @@ export function usePomodoro(config) {
     // Handle session transitions + notifications
     // --------------------------------------------------
     const handleSessionEnd = () => {
+        setIsRunning(false);
         // Play sound
         try {
             sound.currentTime = 0;
@@ -81,7 +82,8 @@ export function usePomodoro(config) {
             console.warn("Sound playback blocked:", e);
         }
 
-        setIsRunning(false);
+        // Vibración en móvil
+        navigator.vibrate?.([120, 80, 120]);
 
         // Notification
         if (Notification.permission === "granted") {
