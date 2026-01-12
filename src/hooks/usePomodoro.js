@@ -1,48 +1,74 @@
 import { useState, useEffect, useRef } from "react";
-import { playBeep } from "../utils/sound";
-
 
 export function usePomodoro(config) {
-    const [timeLeft, setTimeLeft] = useState(config.work * 60);
-    const [isRunning, setIsRunning] = useState(false);
     const [sessionType, setSessionType] = useState("work"); // work | short | long
     const [sessionCount, setSessionCount] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(config.work * 60);
+    const [isRunning, setIsRunning] = useState(false);
 
     const intervalRef = useRef(null);
 
+    // -----------------------------
+    // Update timeLeft when config changes
+    // -----------------------------
     useEffect(() => {
-        if (!isRunning) return;
+        if (!isRunning) {
+        if (sessionType === "work") setTimeLeft(config.work * 60);
+        if (sessionType === "short") setTimeLeft(config.short * 60);
+        if (sessionType === "long") setTimeLeft(config.long * 60);
+        }
+    }, [config, sessionType, isRunning]);
+
+    // -----------------------------
+    // Start timer
+    // -----------------------------
+    const start = () => {
+        if (isRunning) return;
+
+        setIsRunning(true);
 
         intervalRef.current = setInterval(() => {
         setTimeLeft(prev => {
-            if (prev === 1) {
+            if (prev <= 1) {
+            clearInterval(intervalRef.current);
             handleSessionEnd();
             return 0;
             }
             return prev - 1;
         });
         }, 1000);
-
-        return () => clearInterval(intervalRef.current);
-    }, [isRunning]);
-
-    const start = () => setIsRunning(true);
-    const stop = () => setIsRunning(false);
-    const reset = () => {
-        setIsRunning(false);
-        setTimeLeft(config.work * 60);
-        setSessionType("work");
     };
 
-    const handleSessionEnd = () => {
-        playBeep();
+    // -----------------------------
+    // Stop timer
+    // -----------------------------
+    const stop = () => {
+        setIsRunning(false);
+        clearInterval(intervalRef.current);
+    };
 
+    // -----------------------------
+    // Reset timer
+    // -----------------------------
+    const reset = () => {
+        stop();
+        if (sessionType === "work") setTimeLeft(config.work * 60);
+        if (sessionType === "short") setTimeLeft(config.short * 60);
+        if (sessionType === "long") setTimeLeft(config.long * 60);
+    };
+
+    // -----------------------------
+    // Handle session transitions
+    // -----------------------------
+    const handleSessionEnd = () => {
         setIsRunning(false);
 
+        // Work session finished → increment count
         if (sessionType === "work") {
         const newCount = sessionCount + 1;
         setSessionCount(newCount);
 
+        // Every 4 work sessions → long break
         if (newCount % 4 === 0) {
             setSessionType("long");
             setTimeLeft(config.long * 60);
@@ -50,17 +76,27 @@ export function usePomodoro(config) {
             setSessionType("short");
             setTimeLeft(config.short * 60);
         }
-        } else {
+        }
+
+        // Break finished → back to work
+        if (sessionType === "short" || sessionType === "long") {
         setSessionType("work");
         setTimeLeft(config.work * 60);
         }
     };
 
+    // -----------------------------
+    // Cleanup interval on unmount
+    // -----------------------------
+    useEffect(() => {
+        return () => clearInterval(intervalRef.current);
+    }, []);
+
     return {
         timeLeft,
-        isRunning,
         sessionType,
         sessionCount,
+        isRunning,
         start,
         stop,
         reset
